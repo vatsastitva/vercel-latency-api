@@ -6,7 +6,6 @@ from pathlib import Path
 
 app = FastAPI()
 
-# Enable CORS for all origins
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -15,7 +14,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load dataset once
 DATA_FILE = Path(__file__).parent / "q-vercel-latency.json"
 df = pd.read_json(DATA_FILE)
 
@@ -23,18 +21,15 @@ df = pd.read_json(DATA_FILE)
 async def root():
     return {"message": "Vercel Latency Analytics API is running."}
 
-# This route will appear at /api/ (Vercel adds the prefix automatically)
-@app.post("/")
+@app.post("/api")
 async def get_latency_stats(request: Request):
     payload = await request.json()
     regions_to_process = payload.get("regions", [])
     threshold = payload.get("threshold_ms", 200)
 
     results = []
-
     for region in regions_to_process:
         region_df = df[df["region"] == region]
-
         if not region_df.empty:
             avg_latency = round(region_df["latency_ms"].mean(), 2)
             p95_latency = round(np.percentile(region_df["latency_ms"], 95), 2)
@@ -48,5 +43,4 @@ async def get_latency_stats(request: Request):
                 "avg_uptime": avg_uptime,
                 "breaches": breaches
             })
-
     return {"regions": results}
