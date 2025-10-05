@@ -13,20 +13,17 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"],
 )
 
-# Load the dataset once when the app starts
-# The data file should be in the same directory as this script
+# Load dataset once
 DATA_FILE = Path(__file__).parent / "q-vercel-latency.json"
 df = pd.read_json(DATA_FILE)
 
+@app.get("/")
+async def root():
+    return {"message": "Vercel Latency Analytics API is running."}
 
-# @app.get("/")
-# async def root():
-#     return {"message": "Vercel Latency Analytics API is running."}
-
-
+# This route will appear at /api/ (Vercel adds the prefix automatically)
 @app.post("/")
 async def get_latency_stats(request: Request):
     payload = await request.json()
